@@ -1,0 +1,6 @@
+resources:
+  apps:
+    arsenal_app:
+      name: arsenal
+      description: "Arsenal FC Football Intelligence Platform — AI-powered control center for sporting and commercial decision-making"
+      source_code_path: ..

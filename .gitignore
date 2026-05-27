@@ -1,0 +1,14 @@
+node_modules/
+frontend/dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.databricks/
+.env
+.env.local
+data/sample_videos/
+*.egg-info/
+.DS_Store
+.cursor/
+frontend/node_modules

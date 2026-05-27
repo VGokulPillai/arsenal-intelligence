@@ -1,0 +1,50 @@
+bundle:
+  name: arsenal
+
+include:
+  - resources/arsenal.app.yml
+
+sync:
+  exclude:
+    - "**/node_modules/**"
+    - "**/.venv/**"
+    - "**/__pycache__/**"
+    - "**/.git/**"
+    - "data/sample_videos/**"
+
+variables:
+  workspace_host:
+    default: "https://fevm-serverless-stable-0esuib.cloud.databricks.com"
+    description: "Databricks workspace URL"
+
+  warehouse_id:
+    default: ""
+    description: "SQL warehouse ID for the Genie Space"
+
+  catalog:
+    default: "main"
+    description: "Unity Catalog catalog where Genie tables live"
+
+  schema:
+    default: "arsenal"
+    description: "Unity Catalog schema for Genie tables"
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      host: https://fevm-serverless-stable-0esuib.cloud.databricks.com
+      profile: fe-vm-serverless-stable
+    variables:
+      catalog: "main"
+      schema: "arsenal_dev"
+
+  prod:
+    mode: production
+    workspace:
+      host: https://fevm-serverless-stable-0esuib.cloud.databricks.com
+      profile: fe-vm-serverless-stable
+    variables:
+      catalog: "main"
+      schema: "arsenal"
