@@ -17,6 +17,7 @@ import {
   UsersRound,
   ClipboardList,
   Network,
+  MonitorSmartphone,
 } from "lucide-react";
 import GeniePanel from "./GeniePanel";
 import { useGenie } from "../contexts/GenieContext";
@@ -35,6 +36,7 @@ const navItems = [
   { path: "/fan-ops", label: "Fan Group Ops", icon: UsersRound },
   { path: "/fan-ops/updates", label: "Ops Updates", icon: ClipboardList },
   { path: "/architecture", label: "Architecture", icon: Network },
+  { path: "/dotnet-integration", label: ".NET / C# Integration", icon: MonitorSmartphone },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {

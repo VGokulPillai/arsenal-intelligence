@@ -14,6 +14,7 @@ import FanGroupDashboard from "./pages/FanGroupDashboard";
 import FanGroupDetail from "./pages/FanGroupDetail";
 import FanOpsUpdates from "./pages/FanOpsUpdates";
 import Architecture from "./pages/Architecture";
+import DotNetIntegration from "./pages/DotNetIntegration";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path="/fan-ops/:groupId" element={<FanGroupDetail />} />
         <Route path="/fan-ops/updates" element={<FanOpsUpdates />} />
         <Route path="/architecture" element={<Architecture />} />
+        <Route path="/dotnet-integration" element={<DotNetIntegration />} />
       </Routes>
     </Layout>
   );
