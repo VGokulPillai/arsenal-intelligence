@@ -15,6 +15,7 @@ import FanGroupDetail from "./pages/FanGroupDetail";
 import FanOpsUpdates from "./pages/FanOpsUpdates";
 import Architecture from "./pages/Architecture";
 import DotNetIntegration from "./pages/DotNetIntegration";
+import MatchCenter from "./pages/MatchCenter";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/media" element={<MediaIntelligence />} />
         <Route path="/simulation" element={<Simulation />} />
         <Route path="/football" element={<FootballData />} />
+        <Route path="/match-center" element={<MatchCenter />} />
         <Route path="/vision-scouting" element={<VisionScouting />} />
         <Route path="/fan-ops" element={<FanGroupDashboard />} />
         <Route path="/fan-ops/:groupId" element={<FanGroupDetail />} />

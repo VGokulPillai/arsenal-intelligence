@@ -293,6 +293,18 @@ async def get_fixtures_statistics(
     return await _fetch("fixtures/statistics", params)
 
 
+@router.get("/fixtures/players")
+async def get_fixtures_players(
+    fixture: int = Query(...),
+    team: Optional[int] = Query(None),
+):
+    """getFixtures players - Individual player stats for a specific match."""
+    params = {"fixture": fixture}
+    if team:
+        params["team"] = team
+    return await _fetch("fixtures/players", params)
+
+
 # --- Injuries ---
 @router.get("/injuries")
 async def get_injuries(

@@ -18,6 +18,7 @@ import {
   ClipboardList,
   Network,
   MonitorSmartphone,
+  Crosshair,
 } from "lucide-react";
 import GeniePanel from "./GeniePanel";
 import { useGenie } from "../contexts/GenieContext";
@@ -25,6 +26,7 @@ import { useGenie } from "../contexts/GenieContext";
 const navItems = [
   { path: "/", label: "Executive Dashboard", icon: LayoutDashboard },
   { path: "/football", label: "Live Football Data", icon: Globe },
+  { path: "/match-center", label: "Match Center", icon: Crosshair },
   { path: "/audience", label: "Audience & Demand", icon: Users },
   { path: "/revenue", label: "Revenue Optimization", icon: TrendingUp },
   { path: "/players", label: "Player Performance", icon: Activity },

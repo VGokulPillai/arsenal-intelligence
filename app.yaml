@@ -16,4 +16,4 @@ env:
   - name: SCHEMA
     value: "default"
   - name: API_FOOTBALL_KEY
-    value: "4b6e57e978ee6be8339795f394ae2c4a"
+    value: "223925b64fe51df078568fb4df2442db"
