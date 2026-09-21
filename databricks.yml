@@ -3,6 +3,7 @@ bundle:
 
 include:
   - resources/arsenal.app.yml
+  - resources/arsenal.lakebase.yml
 
 sync:
   exclude:
@@ -42,13 +43,37 @@ variables:
     default: "arsenal-lakebase"
     description: "Lakebase project name"
 
-  lakebase_branch:
-    default: "projects/arsenal-lakebase/branches/production"
-    description: "Lakebase branch path"
+  lakebase_project_id:
+    default: "arsenal-lakebase"
+    description: "Lakebase project ID for DABs resource definition"
 
-  lakebase_database:
-    default: "projects/arsenal-lakebase/branches/production/databases/db-k5rv-e6gmeiiqbn"
-    description: "Lakebase database path (arsenal_fan_ops)"
+  app_sp_client_id:
+    default: "293f5e9b-94aa-4396-9739-4239164ecf12"
+    description: "App service principal client ID"
+
+  dev_group_name:
+    default: "arsenal-dev"
+    description: "Development group name for permissions"
+
+  uat_group_name:
+    default: "arsenal-uat"
+    description: "UAT group name for permissions"
+
+  prod_min_cu:
+    default: 4
+    description: "Production endpoint minimum compute units"
+
+  prod_max_cu:
+    default: 8
+    description: "Production endpoint maximum compute units"
+
+  dev_min_cu:
+    default: 0.5
+    description: "Dev/UAT endpoint minimum compute units"
+
+  dev_max_cu:
+    default: 2
+    description: "Dev/UAT endpoint maximum compute units"
 
 targets:
   dev:
@@ -60,6 +85,19 @@ targets:
     variables:
       catalog: "main"
       schema: "arsenal_dev"
+    resources:
+      apps:
+        arsenal_app:
+          resources:
+            - name: postgres
+              postgres:
+                branch: ${resources.postgres_branches.development.name}
+                database: ${resources.postgres_branches.development.name}/databases/arsenal-fan-ops
+                permission: CAN_CONNECT_AND_CREATE
+            - name: serving-endpoint
+              serving_endpoint:
+                name: "databricks-claude-sonnet-4-5"
+                permission: CAN_QUERY
 
   prod:
     mode: production
@@ -69,3 +107,16 @@ targets:
     variables:
       catalog: "main"
       schema: "arsenal"
+    resources:
+      apps:
+        arsenal_app:
+          resources:
+            - name: postgres
+              postgres:
+                branch: ${resources.postgres_branches.production.name}
+                database: ${resources.postgres_databases.arsenal_fan_ops_db.name}
+                permission: CAN_CONNECT_AND_CREATE
+            - name: serving-endpoint
+              serving_endpoint:
+                name: "databricks-claude-sonnet-4-5"
+                permission: CAN_QUERY

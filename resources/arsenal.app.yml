@@ -8,8 +8,8 @@ resources:
       resources:
         - name: postgres
           postgres:
-            branch: ${var.lakebase_branch}
-            database: ${var.lakebase_database}
+            branch: ${resources.postgres_branches.production.name}
+            database: ${resources.postgres_databases.arsenal_fan_ops_db.name}
             permission: CAN_CONNECT_AND_CREATE
 
         - name: serving-endpoint

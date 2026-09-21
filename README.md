@@ -135,8 +135,24 @@ arsenal/
 │   │   └── lib/           # API client, utilities
 │   ├── public/images/     # Arsenal branding assets
 │   └── package.json
-└── resources/
-    └── arsenal.app.yml    # DAB app resource definition
+├── resources/             # Databricks Asset Bundle resources
+│   ├── arsenal.app.yml    # App + serving endpoint resource
+│   └── arsenal.lakebase.yml # Lakebase project, branches, endpoints, roles
+├── scripts/
+│   └── lakebase/          # Lakebase automation scripts
+│       ├── reset-development.sh
+│       ├── create-feature-branch.sh
+│       ├── delete-feature-branch.sh
+│       ├── apply-permissions.sh
+│       └── validate-permissions.sh
+└── db/
+    ├── migrations/        # Schema change migrations (version-controlled)
+    │   ├── V001__create_coaching_schema.sql
+    │   └── V002__create_scouting_schema.sql
+    └── permissions/       # Branch-specific RBAC SQL
+        ├── apply_prod_permissions.sql
+        ├── apply_dev_permissions.sql
+        └── apply_uat_permissions.sql
 ```
 
 ### Data Flow
@@ -198,7 +214,7 @@ Ticketing Source (CSV/API/CRM)
 
 ### Prerequisites
 
-- Databricks CLI (0.229.0+)
+- Databricks CLI (v1.0.0+ required for Lakebase DAB resources)
 - Node.js 18+
 - Python 3.10+
 - Access to a Databricks workspace with:
@@ -467,3 +483,213 @@ The platform demonstrates how **Databricks** powers end-to-end club intelligence
 ## License
 
 Internal demo. Arsenal FC branding for illustrative purposes only.
+
+---
+
+## Lakebase Branching & Environment Strategy
+
+This repository manages Lakebase infrastructure as code using **Databricks Asset Bundles (DABs)**. The Lakebase project uses the **Autoscaling** model (`postgres_projects`), not the legacy Provisioned model.
+
+### Prerequisites
+
+- **Databricks CLI v1.0.0+** — Required for `postgres_roles`, `postgres_databases`, and all Lakebase resources. Check with `databricks --version`.
+- **CAN_MANAGE** permission on the Lakebase project.
+- OAuth U2M authentication configured (`databricks auth login`).
+
+### Branch Topology
+
+```
+production (protected)          ← Live application data
+├── uat                         ← Business validation before production
+└── development                 ← Active development & testing
+    ├── feature-james-xyz       ← Ephemeral feature branch
+    └── feature-other-change    ← Ephemeral feature branch
+```
+
+| Branch | Purpose | Persistence | Parent | Protected |
+|--------|---------|-------------|--------|-----------|
+| `production` | Live application data, serving the deployed app | Permanent | — | Yes |
+| `uat` | Business acceptance testing before production promotion | Permanent | production | No |
+| `development` | Day-to-day development, periodically reset from production | Permanent | production | No |
+| `feature-*` | Isolated work for individual features/developers | Temporary | development | No |
+
+### Permission Matrix (RBAC)
+
+Lakebase Postgres role state and GRANTs are **branch-local**. Each branch has its own permission model.
+
+| Branch | Role | `arsenal_fan_ops` | `coaching` | `scouting` | Admin Privs |
+|--------|------|-------------------|-----------|-----------|-------------|
+| **production** | App Service Principal | READ + WRITE | READ + WRITE | READ + WRITE | None |
+| **production** | Human Developers | READ only | READ only | READ only | None |
+| **development** | App Service Principal | READ + WRITE | READ + WRITE | READ + WRITE | None |
+| **development** | Developer Group | READ + WRITE | READ + WRITE | READ + WRITE | None |
+| **uat** | App Service Principal | READ + WRITE | READ + WRITE | READ + WRITE | None |
+| **uat** | UAT Tester Group | READ + WRITE | READ + WRITE | READ + WRITE | None |
+
+**Principle of least privilege:**
+- No developer gets `DATABRICKS_SUPERUSER`, `BYPASSRLS`, or `CREATEROLE`
+- Project-level `CAN_USE`/`CAN_MANAGE` are NOT used as substitutes for schema-level Postgres privileges
+- Unity Catalog synced tables remain read-only to all application users
+
+### Repository Structure
+
+```
+resources/
+  arsenal.app.yml           # Databricks App + Lakebase binding
+  arsenal.lakebase.yml      # Lakebase project, branches, endpoints, roles, databases
+
+scripts/
+  lakebase/
+    reset-development.sh    # Reset dev from production + reapply permissions
+    create-feature-branch.sh # Create isolated feature branch from development
+    delete-feature-branch.sh # Safely delete a feature branch
+    apply-permissions.sh    # Apply permission SQL to a specific branch
+    validate-permissions.sh # Validate RBAC across all branches
+
+db/
+  migrations/
+    V001__create_coaching_schema.sql
+    V002__create_scouting_schema.sql
+  permissions/
+    apply_prod_permissions.sql
+    apply_dev_permissions.sql
+    apply_uat_permissions.sql
+```
+
+### Deployment
+
+#### Validate and Deploy
+
+```bash
+# Validate configuration
+databricks bundle validate -t dev
+
+# Deploy to development
+databricks bundle deploy -t dev
+
+# Deploy to production
+databricks bundle validate -t prod
+databricks bundle deploy -t prod
+```
+
+#### What Gets Deployed
+
+The bundle creates/adopts:
+- Lakebase project (adopted from existing `arsenal-lakebase`)
+- Protected production branch with 4-8 CU endpoint
+- Development branch with 0.5-2 CU endpoint (scale-to-zero)
+- UAT branch with 0.5-2 CU endpoint (scale-to-zero)
+- Postgres roles for application and developers
+- Named database (`arsenal_fan_ops`) bound to the app
+
+### Adopting Existing Lakebase Infrastructure
+
+This repository adopts an **already-existing** Lakebase project rather than creating a new one. The adoption process:
+
+1. Existing resources are declared with `replace_existing: true`
+2. The bundle takes over management without destroying data
+3. `lifecycle.prevent_destroy: true` on the project prevents accidental deletion
+
+**Safe adoption steps:**
+
+```bash
+# 1. Verify existing infrastructure
+databricks postgres list-projects -p your-profile
+databricks postgres list-branches projects/arsenal-lakebase -p your-profile
+databricks postgres list-databases projects/arsenal-lakebase/branches/production -p your-profile
+
+# 2. Validate bundle (no changes made)
+databricks bundle validate -t prod
+
+# 3. Deploy — bundle adopts existing resources
+databricks bundle deploy -t prod
+
+# 4. Verify nothing was destroyed
+databricks postgres list-branches projects/arsenal-lakebase -p your-profile
+```
+
+### Development Reset Workflow
+
+The team periodically needs to refresh development with current production data/schema. Lakebase reset is a **full overwrite** of the child branch, which also resets branch-local Postgres roles and GRANTs.
+
+```bash
+# Reset development from production
+./scripts/lakebase/reset-development.sh --profile your-profile
+
+# What happens:
+# 1. Verifies target is "development" (refuses production/uat)
+# 2. Checks for child feature branches (aborts if any exist)
+# 3. Prompts for confirmation
+# 4. Resets development from production via Databricks CLI
+# 5. Waits for branch and endpoint to become ready
+# 6. Reapplies development-specific RBAC (db/permissions/apply_dev_permissions.sql)
+# 7. Validates permissions
+```
+
+**Important:** If child feature branches exist under development, the reset will fail. Delete feature branches first:
+
+```bash
+./scripts/lakebase/delete-feature-branch.sh feature-james-xyz --profile your-profile
+```
+
+### Feature Branch Workflow
+
+Developers create isolated branches from development for feature work:
+
+```bash
+# Create a feature branch
+./scripts/lakebase/create-feature-branch.sh feature-james-xyz --profile your-profile
+
+# Work on your feature...
+# Feature branches inherit data + schema from development
+
+# Delete when done
+./scripts/lakebase/delete-feature-branch.sh feature-james-xyz --profile your-profile
+```
+
+**Critical:** Lakebase does **NOT** merge database branches from child → parent. Feature branches are **disposable environments**. Schema changes must be promoted through source-controlled migrations, not branch merging.
+
+### Schema Migrations
+
+Database schema changes live in `db/migrations/` and are applied through environments in order:
+
+```
+development → uat → production
+```
+
+**Workflow:**
+1. Write migration SQL in `db/migrations/V00N__description.sql`
+2. Test on a feature branch or development
+3. Apply to UAT for business validation
+4. Apply to production during deployment
+
+**Migrations are NOT applied by copying database branches.** They are explicit SQL files tracked in Git.
+
+### How the App Receives Its Lakebase Connection
+
+The Databricks App resource binding in `resources/arsenal.app.yml` declares a `postgres` resource. When deployed, Databricks automatically injects:
+
+| Variable | Description |
+|----------|-------------|
+| `PGHOST` | Lakebase endpoint hostname |
+| `PGDATABASE` | Database name |
+| `PGPORT` | Port (5432) |
+| `PGUSER` | Service principal role |
+| `PGSSLMODE` | SSL mode |
+
+The application code in `server/data/fan_ops_db.py` detects `PGHOST` and connects using Databricks SDK OAuth token rotation. If Lakebase is unavailable, it falls back to in-memory SQLite for demo purposes.
+
+### Validation
+
+```bash
+# Validate all permissions and infrastructure
+./scripts/lakebase/validate-permissions.sh --profile your-profile
+
+# Checks:
+# ✓ Project exists
+# ✓ Production branch exists and is protected
+# ✓ Development branch exists
+# ✓ UAT branch exists
+# ✓ All endpoints are active
+# ✓ Roles are correctly configured
+```

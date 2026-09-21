@@ -1,0 +1,89 @@
+# Lakebase Autoscaling infrastructure for Arsenal FC Intelligence Platform
+#
+# Branch topology:
+#   production (protected)
+#   ├── uat
+#   └── development
+#       └── ephemeral feature branches (created via scripts)
+
+resources:
+  # ── Project ──────────────────────────────────────────────────────────────────
+  postgres_projects:
+    arsenal_project:
+      project_id: ${var.lakebase_project_id}
+      display_name: "Arsenal FC Intelligence Platform"
+      pg_version: 16
+      lifecycle:
+        prevent_destroy: true
+      permissions:
+        - service_principal_name: ${var.app_sp_client_id}
+          level: CAN_MANAGE
+
+  # ── Branches ─────────────────────────────────────────────────────────────────
+  postgres_branches:
+    production:
+      branch_id: production
+      parent: ${resources.postgres_projects.arsenal_project.name}
+      is_protected: true
+      no_expiry: true
+      replace_existing: true
+
+    development:
+      branch_id: development
+      parent: ${resources.postgres_projects.arsenal_project.name}
+      source_branch: ${resources.postgres_branches.production.name}
+      no_expiry: true
+
+    uat:
+      branch_id: uat
+      parent: ${resources.postgres_projects.arsenal_project.name}
+      source_branch: ${resources.postgres_branches.production.name}
+      no_expiry: true
+
+  # ── Endpoints ────────────────────────────────────────────────────────────────
+  postgres_endpoints:
+    production_primary:
+      endpoint_id: primary
+      parent: ${resources.postgres_branches.production.name}
+      endpoint_type: ENDPOINT_TYPE_READ_WRITE
+      autoscaling_limit_min_cu: ${var.prod_min_cu}
+      autoscaling_limit_max_cu: ${var.prod_max_cu}
+      no_suspension: true
+      replace_existing: true
+
+    development_primary:
+      endpoint_id: primary
+      parent: ${resources.postgres_branches.development.name}
+      endpoint_type: ENDPOINT_TYPE_READ_WRITE
+      autoscaling_limit_min_cu: ${var.dev_min_cu}
+      autoscaling_limit_max_cu: ${var.dev_max_cu}
+      suspend_timeout_duration: "300s"
+
+    uat_primary:
+      endpoint_id: primary
+      parent: ${resources.postgres_branches.uat.name}
+      endpoint_type: ENDPOINT_TYPE_READ_WRITE
+      autoscaling_limit_min_cu: ${var.dev_min_cu}
+      autoscaling_limit_max_cu: ${var.dev_max_cu}
+      suspend_timeout_duration: "300s"
+
+  # ── Roles (on production, inherited by child branches) ───────────────────────
+  postgres_roles:
+    app_role:
+      role_id: app-role
+      parent: ${resources.postgres_branches.production.name}
+      postgres_role: ${var.app_sp_client_id}
+      identity_type: SERVICE_PRINCIPAL
+      attributes:
+        createdb: false
+        createrole: false
+      replace_existing: true
+
+  # ── Databases ────────────────────────────────────────────────────────────────
+  postgres_databases:
+    arsenal_fan_ops_db:
+      database_id: arsenal-fan-ops
+      parent: ${resources.postgres_branches.production.name}
+      postgres_database: arsenal_fan_ops
+      role: ${resources.postgres_roles.app_role.id}
+      replace_existing: true
