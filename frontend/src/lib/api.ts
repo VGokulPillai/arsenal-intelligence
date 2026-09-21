@@ -25,6 +25,8 @@ export const api = {
     projections: () => fetchApi<Array<Record<string, unknown>>>("/revenue/projections"),
     recommendations: () => fetchApi<Array<Record<string, unknown>>>("/revenue/recommendations"),
     mlStrategies: () => fetchApi<Record<string, unknown>>("/revenue/ml-strategies"),
+    campaigns: () => fetchApi<Array<Record<string, unknown>>>("/revenue/campaigns"),
+    sponsorship: () => fetchApi<Record<string, unknown>>("/revenue/sponsorship"),
     simulate: (fixtureId: string, pct: number) =>
       fetch(
         `${API_BASE}/revenue/simulate?${new URLSearchParams({

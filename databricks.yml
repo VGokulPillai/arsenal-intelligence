@@ -1,5 +1,5 @@
 bundle:
-  name: arsenal
+  name: arsenal-intelligence
 
 include:
   - resources/arsenal.app.yml
@@ -11,31 +11,52 @@ sync:
     - "**/__pycache__/**"
     - "**/.git/**"
     - "data/sample_videos/**"
+    - "frontend/src/**"
+    - "frontend/public/**"
+    - "frontend/index.html"
+    - "frontend/package.json"
+    - "frontend/vite.config.ts"
+    - "frontend/tsconfig.json"
+    - "frontend/tsconfig.tsbuildinfo"
+    - "frontend/tailwind.config.js"
+    - "frontend/postcss.config.js"
 
 variables:
   workspace_host:
-    default: "https://fevm-serverless-stable-0esuib.cloud.databricks.com"
+    default: "https://fevm-serverless-stable-1acr1x.cloud.databricks.com"
     description: "Databricks workspace URL"
 
   warehouse_id:
     default: ""
-    description: "SQL warehouse ID for the Genie Space"
+    description: "SQL warehouse ID (optional)"
 
   catalog:
     default: "main"
-    description: "Unity Catalog catalog where Genie tables live"
+    description: "Unity Catalog catalog"
 
   schema:
     default: "arsenal"
-    description: "Unity Catalog schema for Genie tables"
+    description: "Unity Catalog schema"
+
+  lakebase_project:
+    default: "arsenal-lakebase"
+    description: "Lakebase project name"
+
+  lakebase_branch:
+    default: "projects/arsenal-lakebase/branches/production"
+    description: "Lakebase branch path"
+
+  lakebase_database:
+    default: "projects/arsenal-lakebase/branches/production/databases/db-k5rv-e6gmeiiqbn"
+    description: "Lakebase database path (arsenal_fan_ops)"
 
 targets:
   dev:
     default: true
     mode: development
     workspace:
-      host: https://fevm-serverless-stable-0esuib.cloud.databricks.com
-      profile: fe-vm-serverless-stable
+      host: https://fevm-serverless-stable-1acr1x.cloud.databricks.com
+      profile: fe-vm-1acr1x
     variables:
       catalog: "main"
       schema: "arsenal_dev"
@@ -43,8 +64,8 @@ targets:
   prod:
     mode: production
     workspace:
-      host: https://fevm-serverless-stable-0esuib.cloud.databricks.com
-      profile: fe-vm-serverless-stable
+      host: https://fevm-serverless-stable-1acr1x.cloud.databricks.com
+      profile: fe-vm-1acr1x
     variables:
       catalog: "main"
       schema: "arsenal"

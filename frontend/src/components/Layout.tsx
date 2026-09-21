@@ -19,6 +19,7 @@ import {
   Network,
   MonitorSmartphone,
   Crosshair,
+  Megaphone,
 } from "lucide-react";
 import GeniePanel from "./GeniePanel";
 import { useGenie } from "../contexts/GenieContext";
@@ -29,6 +30,7 @@ const navItems = [
   { path: "/match-center", label: "Match Center", icon: Crosshair },
   { path: "/audience", label: "Audience & Demand", icon: Users },
   { path: "/revenue", label: "Revenue Optimization", icon: TrendingUp },
+  { path: "/commercial", label: "Commercial & Campaigns", icon: Megaphone },
   { path: "/players", label: "Player Performance", icon: Activity },
   { path: "/health", label: "Health & Readiness", icon: Heart },
   { path: "/transfers", label: "Transfer Intelligence", icon: ArrowRightLeft },

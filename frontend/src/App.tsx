@@ -16,6 +16,7 @@ import FanOpsUpdates from "./pages/FanOpsUpdates";
 import Architecture from "./pages/Architecture";
 import DotNetIntegration from "./pages/DotNetIntegration";
 import MatchCenter from "./pages/MatchCenter";
+import Commercial from "./pages/Commercial";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<ExecutiveDashboard />} />
         <Route path="/audience" element={<AudiencePrediction />} />
         <Route path="/revenue" element={<RevenueOptimization />} />
+        <Route path="/commercial" element={<Commercial />} />
         <Route path="/players" element={<PlayerPerformance />} />
         <Route path="/health" element={<HealthMonitoring />} />
         <Route path="/transfers" element={<TransferIntelligence />} />
