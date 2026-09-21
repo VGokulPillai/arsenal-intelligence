@@ -189,15 +189,32 @@ DB_COUNT=$(echo "$DBS_JSON" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 dbs = data if isinstance(data, list) else data.get('databases', [])
+count = len(dbs)
+print(count)
+for db in dbs:
+    name = db.get('name', 'unknown')
+    status = db.get('status', {})
+    pg_name = status.get('postgres_database', db.get('postgres_database', 'unknown'))
+    sys.stderr.write(f'      {pg_name} ({name})\n')
+" 2>&1 1>/dev/null || echo "0")
+
+DB_INFO=$(echo "$DBS_JSON" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+dbs = data if isinstance(data, list) else data.get('databases', [])
 print(len(dbs))
 for db in dbs:
     name = db.get('name', 'unknown')
-    pg_name = db.get('postgres_database', db.get('status', {}).get('postgres_database', 'unknown'))
+    status = db.get('status', {})
+    pg_name = status.get('postgres_database', db.get('postgres_database', 'unknown'))
     print(f'      {pg_name} ({name})')
 " 2>/dev/null || echo "0")
 
-if [[ "$DB_COUNT" -gt 0 ]]; then
-    pass "Production has databases"
+DB_COUNT=$(echo "$DB_INFO" | head -1)
+
+if [[ -n "$DB_COUNT" ]] && [[ "$DB_COUNT" -gt 0 ]] 2>/dev/null; then
+    pass "Production has ${DB_COUNT} database(s)"
+    echo "$DB_INFO" | tail -n +2
 else
     warn_c "No databases found on production"
 fi
