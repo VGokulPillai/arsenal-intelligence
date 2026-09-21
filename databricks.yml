@@ -39,10 +39,6 @@ variables:
     default: "arsenal"
     description: "Unity Catalog schema"
 
-  lakebase_project:
-    default: "arsenal-lakebase"
-    description: "Lakebase project name"
-
   lakebase_project_id:
     default: "arsenal-lakebase"
     description: "Lakebase project ID for DABs resource definition"
@@ -92,7 +88,7 @@ targets:
             - name: postgres
               postgres:
                 branch: ${resources.postgres_branches.development.name}
-                database: ${resources.postgres_branches.development.name}/databases/arsenal-fan-ops
+                database: ${resources.postgres_branches.development.name}/databases/db-k5rv-e6gmeiiqbn
                 permission: CAN_CONNECT_AND_CREATE
             - name: serving-endpoint
               serving_endpoint:

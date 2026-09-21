@@ -82,7 +82,7 @@ resources:
   # ── Databases ────────────────────────────────────────────────────────────────
   postgres_databases:
     arsenal_fan_ops_db:
-      database_id: arsenal-fan-ops
+      database_id: db-k5rv-e6gmeiiqbn
       parent: ${resources.postgres_branches.production.name}
       postgres_database: arsenal_fan_ops
       role: ${resources.postgres_roles.app_role.id}
