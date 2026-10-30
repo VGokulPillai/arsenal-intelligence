@@ -11,4 +11,5 @@ data/sample_videos/
 *.egg-info/
 .DS_Store
 .cursor/
+.vscode/
 frontend/node_modules

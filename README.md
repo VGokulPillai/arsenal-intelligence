@@ -1,695 +1,353 @@
 # Arsenal FC Football Intelligence Platform
 
-An executive-grade, AI-powered control center for Arsenal Football Club, built on **Databricks Apps** with a React frontend and Python/FastAPI backend. Features live weather (Open-Meteo), live football data (API-Football), Databricks Lakebase for operational fan data, ML models, and animated dashboards. The platform unifies sporting performance intelligence and commercial decision-making in one unified application.
+Executive-grade club intelligence on **Databricks Apps**: React frontend, FastAPI backend, live football data, Foundation Models, and **Lakebase** (managed PostgreSQL) for fan-group operations.
 
-![Databricks](https://img.shields.io/badge/Built%20on-Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white)
-![React](https://img.shields.io/badge/Frontend-React%2018-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Lakebase](https://img.shields.io/badge/Data-Lakebase%20(PostgreSQL)-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+This repository deploys as a **Databricks Asset Bundle (DAB)**. Lakebase (project, branches, endpoints, roles, database) and the app are declared in YAML and applied with `databricks bundle deploy`.
 
----
+| Target | App name | Lakebase branch | Purpose |
+|--------|----------|-----------------|--------|
+| `dev` (default) | development-mode prefix | `development` | Day-to-day engineering |
+| `uat` | `arsenal-intelligence-uat` | `uat` | Business validation before prod |
+| `prod` | `arsenal-intelligence` | `production` (protected) | Live serving |
 
-## Features
-
-### ML & RAG (Machine Learning + Retrieval-Augmented Generation)
-
-- **RAG-augmented Copilot**: Ask Genie uses live API-Football data (squad, fixtures, standings, injuries, transfers, predictions) as context for accurate, data-grounded answers
-- **Attendance prediction**: ML model predicts matchday attendance from opponent tier, weather, competition
-- **Injury risk model**: Predicts player injury risk from training load, fatigue, matches/minutes
-- **Match prediction**: API-Football predictions + ML match outcome model
-- **Fan Ops AI**: Genie queries Lakebase in real-time for fan group operations data
-
-### Core Capabilities
-
-1. **Executive Dashboard**
-   - Single pane of glass for leadership
-   - Real-time alerts and key insights
-   - Upcoming fixtures overview with live match countdown
-
-2. **Live Football Data (API-Football)**
-   - Premier League standings (live)
-   - Fixtures, results, and form
-   - Full squad with photos, stats, and positions
-   - Injuries and suspensions
-   - Top scorers and assists
-
-3. **Audience Prediction & Matchday Demand**
-   - Attendance forecasts for upcoming matches
-   - Demand heatmaps by stadium zone
-   - Fan segmentation (geography, loyalty, spending)
-   - Live weather integration (Open-Meteo)
-   - Booking velocity and forecast confidence bands
-
-4. **Revenue Optimization**
-   - Projected revenue by fixture
-   - ML-driven pricing strategies
-   - Marketing recommendations (targeted promotions, upsell)
-   - What-if pricing simulation
-
-5. **Player Performance**
-   - Match metrics (goals, assists, xG, xA, pass %, distance, sprints)
-   - Form progression and position-specific KPIs
-   - Player comparison and radar charts
-   - Player photos from API-Football
-
-6. **Health & Squad Readiness**
-   - Injury status and fatigue monitoring
-   - Training load vs fatigue analysis
-   - ML injury risk model
-   - Medical risk flags
-
-7. **Transfer Intelligence**
-   - Transfer target scores (sporting, commercial, tactical)
-   - Squad gap analysis with ML fit scores
-   - Real transfer data from API-Football
-   - AI-generated recommendations
-
-8. **Media & Popularity Intelligence**
-   - GPT-powered news analysis (injuries, transfers in/out)
-   - Sentiment scores and popularity momentum
-   - Trending players and news summary
-   - Transfer news, match reports, and general news feeds
-
-9. **Live Match Planning (Tactical Board)**
-   - Vertical pitch with XI vs opponent, 90-minute clock
-   - Drag-and-drop substitutions and reshuffles
-   - ML tactical recommendations
-   - Dynamic fatigue simulation
-
-10. **Fan Group Matchday Operations (Lakebase)**
-    - Fan group dashboard with KPIs (allocated, confirmed, pending, cancelled, checked-in)
-    - Fan group detail pages with ticket allocations
-    - Individual fan/ticket lists with seat assignments
-    - Operational updates (ticket status, check-in, gate changes, notes)
-    - Open issues tracking with resolution workflow
-    - Genie AI assistant queries Lakebase in real-time
-
-11. **AI Copilot (Genie)**
-    - Natural language queries about players, fixtures, transfers, revenue
-    - Fan group operations queries powered by Lakebase
-    - Explicit data source attribution (shows when data comes from Lakebase)
-    - Context-aware responses with live data
-
-12. **Architecture Visualization**
-    - Animated data flow diagram
-    - Live Lakebase connection status
-    - Schema explorer
+Clone: [github.com/VGokulPillai/arsenal-intelligence](https://github.com/VGokulPillai/arsenal-intelligence)
 
 ---
 
-## Architecture
+## How to deploy (DABs + Lakebase)
 
-```
-arsenal/
-├── app.py                 # FastAPI entry point
-├── app.yaml               # Databricks App config
-├── databricks.yml         # Asset Bundle definition
-├── requirements.txt       # Python dependencies
-├── server/
-│   ├── config.py          # Dual-mode auth (Databricks vs local)
-│   ├── data/
-│   │   ├── fan_ops_db.py  # Lakebase/SQLite dual-mode database layer
-│   │   ├── fan_ops_seed.py # Sample data generator
-│   │   └── mock_data.py   # Demo data (used when Delta tables not available)
-│   ├── services/
-│   │   └── fixtures.py    # Fixture computation logic
-│   └── routes/            # API endpoints
-│       ├── audience.py    # Attendance & demand
-│       ├── copilot.py     # AI Genie (queries Lakebase for fan ops)
-│       ├── executive.py   # Dashboard KPIs
-│       ├── fan_ops.py     # Fan group CRUD operations
-│       ├── football.py    # API-Football live data
-│       ├── media.py       # News & sentiment
-│       ├── ml.py          # ML model endpoints
-│       ├── players.py     # Player stats
-│       ├── revenue.py     # Revenue optimization
-│       ├── simulation.py  # Tactical simulation
-│       ├── transfers.py   # Transfer market
-│       ├── vision.py      # Video/scouting
-│       └── weather.py     # Open-Meteo weather
-├── frontend/              # React + Vite + Tailwind
-│   ├── src/
-│   │   ├── pages/         # 12+ dashboard pages
-│   │   ├── components/    # Reusable UI components
-│   │   ├── contexts/      # React contexts (Genie, Notifications)
-│   │   └── lib/           # API client, utilities
-│   ├── public/images/     # Arsenal branding assets
-│   └── package.json
-├── resources/             # Databricks Asset Bundle resources
-│   ├── arsenal.app.yml    # App + serving endpoint resource
-│   └── arsenal.lakebase.yml # Lakebase project, branches, endpoints, roles
-├── scripts/
-│   └── lakebase/          # Lakebase automation scripts
-│       ├── reset-development.sh
-│       ├── create-feature-branch.sh
-│       ├── delete-feature-branch.sh
-│       ├── apply-permissions.sh
-│       └── validate-permissions.sh
-└── db/
-    ├── migrations/        # Schema change migrations (version-controlled)
-    │   ├── V001__create_coaching_schema.sql
-    │   └── V002__create_scouting_schema.sql
-    └── permissions/       # Branch-specific RBAC SQL
-        ├── apply_prod_permissions.sql
-        ├── apply_dev_permissions.sql
-        └── apply_uat_permissions.sql
-```
+Do this in order the first time. After that, day-to-day deploys are **build frontend → `bundle deploy` → `bundle run`**.
 
-### Data Flow
+### 1. Prerequisites
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│  React SPA (Vite)                                            │
-│  12+ routed pages + Genie slide-out panel                   │
-└───────────────────────┬──────────────────────────────────────┘
-                        │ /api/* 
-┌───────────────────────▼──────────────────────────────────────┐
-│  FastAPI (app.py, port 8000)                                 │
-│  Route modules under server/routes/                          │
-└──┬────────────┬────────────┬─────────────┬───────────────────┘
-   │            │            │             │
-API-Football  Open-Meteo  Databricks   Databricks Lakebase
-(live data)   (weather)   FM/Genie     (Fan Ops PostgreSQL)
-                          (Copilot)    (ticket ops, issues)
-```
+| Tool | Why |
+|------|-----|
+| [Databricks CLI](https://docs.databricks.com/dev-tools/cli/install.html) **v1.0.0+** | Bundle resources include `postgres_projects`, `postgres_branches`, `postgres_endpoints`, `postgres_roles`, `postgres_databases` |
+| Node.js 18+ | Frontend production build |
+| Python 3.10+ | Local app / scripts |
+| Workspace access | Serverless workspace with Apps + Lakebase. You need **CAN_MANAGE** on the Lakebase project to adopt it |
 
-### Lakebase Architecture (Fan Group Operations)
-
-```
-Ticketing Source (CSV/API/CRM)
-        │
-        ▼
-[Databricks Bronze] raw ticket events
-        │
-        ▼
-[Databricks Silver] cleaned fan groups, fans, fixtures, allocations
-        │
-        ▼
-[Databricks Gold] operational views
-        │
-        ▼
-[Lakebase (PostgreSQL)] operational serving tables
-        │
-        ▼
-[Databricks App] ←→ Frontend + Backend + Genie AI
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Recharts, Framer Motion, Lucide Icons |
-| Backend | FastAPI, Pydantic, Python 3.10+ |
-| AI/ML | Databricks Foundation Models (Claude), OpenAI GPT (news analysis) |
-| Database | Databricks Lakebase (PostgreSQL) with SQLite fallback |
-| Data | Delta Lake, Unity Catalog |
-| Deployment | Databricks Apps, Databricks Asset Bundles |
-| Auth | Databricks SDK OAuth token rotation (for Lakebase) |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Databricks CLI (v1.0.0+ required for Lakebase DAB resources)
-- Node.js 18+
-- Python 3.10+
-- Access to a Databricks workspace with:
-  - Foundation Model endpoint (e.g., `databricks-claude-sonnet-4-5`)
-  - Lakebase instance (for fan ops — optional, falls back to SQLite)
-  - SQL warehouse (optional, for Delta table queries)
-
-### 1. Clone the Repository
+Check the CLI:
 
 ```bash
-git clone https://github.com/VGokulPillai/arsenal-intelligence.git
-cd arsenal-intelligence
+databricks --version
 ```
 
-### 2. Local Development
+### 2. Authenticate
 
-**Backend:**
+The bundle targets use profile `fe-vm-1acr1x` and host `https://fevm-serverless-stable-1acr1x.cloud.databricks.com`. Change `databricks.yml` if you are deploying to a different workspace.
 
 ```bash
-pip install -r requirements.txt
-export DATABRICKS_PROFILE=your-profile
-uvicorn app:app --reload --port 8000
+databricks auth login \
+  --host https://fevm-serverless-stable-1acr1x.cloud.databricks.com \
+  --profile fe-vm-1acr1x
+
+databricks auth profiles
 ```
 
-**Frontend (separate terminal):**
+Optional: `export DATABRICKS_PROFILE=fe-vm-1acr1x`
+
+### 3. Point the bundle at your workspace
+
+Edit `databricks.yml`:
+
+- `targets.*.workspace.host` and `targets.*.workspace.profile`
+- `variables.lakebase_project_id` (default `arsenal-lakebase`)
+- `variables.app_sp_client_id` (app service principal used for the Postgres role)
+- `variables.dev_group_name` / `uat_group_name` if you use different workspace groups
+
+This repo **adopts** an existing Lakebase project. It does not wipe data. The project has `lifecycle.prevent_destroy: true`.
+
+Confirm what already exists:
+
+```bash
+databricks postgres list-projects -p fe-vm-1acr1x
+databricks postgres list-branches projects/arsenal-lakebase -p fe-vm-1acr1x
+databricks postgres list-databases projects/arsenal-lakebase/branches/production -p fe-vm-1acr1x
+```
+
+### 4. Build the frontend
+
+The app serves the Vite build. DAB sync excludes `frontend/src`, so you must build **before** every deploy.
 
 ```bash
 cd frontend
 npm install
-npm run dev   # Starts on http://localhost:5173, proxies /api to backend
+npm run build
+cd ..
 ```
 
-Open http://localhost:5173
+### 5. Validate, then deploy the bundle
 
-### 3. Deploy to Databricks Apps
+Pick a target. **Always validate before deploy.**
 
-#### Option A: Asset Bundles (Recommended)
+```bash
+# Development (default)
+databricks bundle validate -t dev
+databricks bundle deploy -t dev
 
-1. **Configure your workspace** — Edit `databricks.yml` targets:
+# UAT — dedicated app bound to the uat Lakebase branch
+databricks bundle validate -t uat
+databricks bundle deploy -t uat
 
-```yaml
-targets:
-  dev:
-    workspace:
-      host: https://YOUR-WORKSPACE.cloud.databricks.com
-      profile: your-profile
+# Production
+databricks bundle validate -t prod
+databricks bundle deploy -t prod
 ```
 
-2. **Build and deploy:**
+Add `--auto-approve` only in CI or when you have already reviewed the plan.
+
+**What `bundle deploy` creates or adopts**
+
+| Resource | Defined in | Notes |
+|----------|------------|--------|
+| Databricks App | `resources/arsenal.app.yml` | Source is the repo root (`source_code_path: ..`) |
+| Lakebase project | `resources/arsenal.lakebase.yml` | `arsenal-lakebase`, Postgres 16, prevent destroy |
+| Branches | same | `production` (protected), `uat`, `development` |
+| Endpoints | same | Prod 4–8 CU, no suspend; UAT/dev 0.5–2 CU, scale-to-zero |
+| App Postgres role | same | Service principal, no `createdb` / `createrole` |
+| Database `arsenal_fan_ops` | same | Bound on production; child branches inherit it |
+
+Dev and UAT bind the app to the matching **Lakebase branch**. Prod binds to the protected production branch and the named database resource.
+
+### 6. Start the app
+
+Apps do not stay running from deploy alone. Start (or restart) after a successful deploy:
+
+```bash
+databricks bundle run arsenal_app -t dev
+databricks bundle run arsenal_app -t uat
+databricks bundle run arsenal_app -t prod
+```
+
+Logs:
+
+```bash
+databricks apps logs arsenal-intelligence -p fe-vm-1acr1x
+databricks apps logs arsenal-intelligence-uat -p fe-vm-1acr1x
+```
+
+Look for `Deployment successful` and `App started successfully`. The app injects `PGHOST`, `PGDATABASE`, `PGPORT`, `PGUSER` from the bundle Postgres binding. The backend in `server/data/fan_ops_db.py` uses Databricks SDK OAuth (no static DB password). If Lakebase is missing, it falls back to in-memory SQLite for demos.
+
+### 7. Promote through environments
+
+```
+development  →  uat  →  production
+```
+
+1. Deploy and test `-t dev` (Lakebase `development` branch).
+2. Deploy `-t uat`. Testers use `arsenal-intelligence-uat` against the `uat` branch.
+3. After sign-off, deploy `-t prod`.
+
+Schema changes are **SQL files in Git**, not Lakebase branch merges. Lakebase does **not** merge child → parent.
+
+```
+db/migrations/V00N__description.sql
+```
+
+Apply in order: development → UAT → production (see `scripts/lakebase/` and `db/permissions/`).
+
+---
+
+## Lakebase layout
+
+```
+production (protected)          live data, serving the prod app
+├── uat                         business acceptance
+└── development                 engineering
+    └── feature-*               disposable (scripts, not the bundle)
+```
+
+| Branch | Persistence | Parent | Protected | App target |
+|--------|-------------|--------|-----------|------------|
+| `production` | Permanent | project | Yes | `-t prod` |
+| `uat` | Permanent | production | No | `-t uat` |
+| `development` | Permanent | production | No | `-t dev` |
+| `feature-*` | Temporary | development | No | local / scripts |
+
+**RBAC (branch-local GRANTs)** — SQL in `db/permissions/`:
+
+| Branch | App service principal | Humans |
+|--------|----------------------|--------|
+| production | READ + WRITE on `arsenal_fan_ops`, `coaching`, `scouting` | READ only |
+| development | READ + WRITE | `arsenal-dev` group READ + WRITE |
+| uat | READ + WRITE | `arsenal-uat` group READ + WRITE |
+
+No developer gets `DATABRICKS_SUPERUSER`, `BYPASSRLS`, or `CREATEROLE`. Project `CAN_USE` / `CAN_MANAGE` is not a substitute for schema GRANTs.
+
+### Lakebase day-2 operations
+
+These scripts sit **on top of** the bundle. They do not replace `bundle deploy`.
+
+```bash
+# Reset development from production, then reapply dev GRANTs
+./scripts/lakebase/reset-development.sh --profile fe-vm-1acr1x
+
+# Isolated feature work (not declared in the bundle)
+./scripts/lakebase/create-feature-branch.sh feature-your-change --profile fe-vm-1acr1x
+./scripts/lakebase/delete-feature-branch.sh feature-your-change --profile fe-vm-1acr1x
+
+# Apply branch-specific SQL
+./scripts/lakebase/apply-permissions.sh --profile fe-vm-1acr1x
+
+# Check project, branches, endpoints, roles
+./scripts/lakebase/validate-permissions.sh --profile fe-vm-1acr1x
+```
+
+Reset of `development` is a full overwrite. It refuses `production` and `uat`. Delete child feature branches first or the reset fails.
+
+**Adopt existing Lakebase without data loss**
+
+```bash
+databricks bundle validate -t prod
+databricks bundle deploy -t prod
+databricks postgres list-branches projects/arsenal-lakebase -p fe-vm-1acr1x
+```
+
+Resources use `replace_existing: true` so the bundle takes over management instead of creating a second project.
+
+### Connect with `psql` (optional)
+
+```bash
+databricks psql arsenal-lakebase -p fe-vm-1acr1x
+```
+
+---
+
+## Local development (no deploy)
+
+```bash
+git clone https://github.com/VGokulPillai/arsenal-intelligence.git
+cd arsenal-intelligence
+
+pip install -r requirements.txt
+export DATABRICKS_PROFILE=fe-vm-1acr1x
+uvicorn app:app --reload --port 8000
+```
+
+```bash
+cd frontend
+npm install
+npm run dev    # http://localhost:5173, proxies /api to :8000
+```
+
+---
+
+## Manual app deploy (not recommended)
+
+Use this only if you cannot run the bundle. Lakebase still needs the YAML resources (or the UI) — this path deploys **code only**.
 
 ```bash
 cd frontend && npm run build && cd ..
-databricks bundle deploy -t dev
-```
 
-#### Option B: Manual Deploy
-
-1. **Create the app:**
-
-```bash
 databricks apps create arsenal-intelligence \
   --description "Arsenal FC Football Intelligence Platform" \
-  -p your-profile
-```
+  -p fe-vm-1acr1x
 
-2. **Build the frontend:**
-
-```bash
-cd frontend && npm run build && cd ..
-```
-
-3. **Upload to workspace:**
-
-```bash
 WORKSPACE_PATH="/Workspace/Users/your-email/apps/arsenal-intelligence"
-
 databricks workspace import-dir . "$WORKSPACE_PATH" \
   --exclude node_modules --exclude .venv --exclude __pycache__ \
   --exclude .git --exclude frontend/node_modules \
-  -p your-profile --overwrite
-```
+  -p fe-vm-1acr1x --overwrite
 
-4. **Deploy:**
-
-```bash
 databricks apps deploy arsenal-intelligence \
   --source-code-path "$WORKSPACE_PATH" \
-  -p your-profile
+  -p fe-vm-1acr1x
 ```
 
 ---
 
-## Lakebase Setup (Fan Group Operations)
-
-The fan operations module uses **Databricks Lakebase** (PostgreSQL-compatible) for real-time operational data. If Lakebase is not configured, the app automatically falls back to in-memory SQLite with sample data.
-
-### Connecting to Lakebase
-
-1. **Create a Lakebase instance** in your Databricks workspace (Compute > Lakebase)
-
-2. **Attach Lakebase to the app** via REST API:
+## Tear down
 
 ```bash
-curl -X PATCH \
-  "https://YOUR-WORKSPACE.cloud.databricks.com/api/2.0/apps/arsenal-intelligence" \
-  -H "Authorization: Bearer $(databricks auth token -p your-profile)" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resources": [{
-      "name": "lakebase",
-      "lakebase": {
-        "instance_name": "your-lakebase-instance",
-        "database_name": "your-database",
-        "permission": "READ_WRITE"
-      }
-    }]
-  }'
+databricks bundle destroy -t dev
+databricks bundle destroy -t uat --auto-approve
 ```
 
-3. **Redeploy** the app — the platform auto-detects `PGHOST` and connects using OAuth tokens:
+Do **not** destroy `-t prod` unless you intend to drop the production app. The Lakebase **project** is marked `prevent_destroy`; still treat `bundle destroy` as dangerous.
 
-```bash
-databricks apps deploy arsenal-intelligence \
-  --source-code-path "$WORKSPACE_PATH" -p your-profile
+---
+
+## Troubleshooting deploy
+
+| Symptom | What to do |
+|---------|------------|
+| Validate fails on Postgres resources | Upgrade CLI to 1.0.0+ |
+| App not reachable after deploy | `databricks bundle run arsenal_app -t <target>` |
+| App cannot see Lakebase | Confirm the target binds the right branch; check `databricks apps logs …` for `PGHOST` |
+| Wrong catalog/schema | Set `targets.<name>.variables.catalog` / `schema` |
+| Feature-branch reset blocked | Delete `feature-*` children first |
+| Permissions look wrong after reset | Re-run `apply-permissions.sh` then `validate-permissions.sh` |
+| Frontend 404 / empty UI | You skipped `npm run build` |
+
+---
+
+## Environment variables
+
+Set in `app.yaml` (app runtime), not in `databricks.yml`.
+
+| Variable | Role | Required |
+|----------|------|----------|
+| `SERVING_ENDPOINT` | Foundation Model, e.g. `databricks-claude-sonnet-4-5` | Recommended |
+| `CATALOG` / `SCHEMA` | Unity Catalog defaults | Optional |
+| `API_FOOTBALL_KEY` | Live football data | Recommended |
+| `DATABRICKS_WAREHOUSE_ID` | Delta queries | Optional |
+| `PGHOST` / `PGDATABASE` / `PGPORT` / `PGUSER` | Injected from the bundle Postgres binding | Auto |
+
+---
+
+## What the platform does
+
+- **Executive dashboard** — KPIs, alerts, next-match countdown
+- **Live football** — API-Football standings, squad, fixtures, injuries
+- **Audience & revenue** — attendance ML, pricing, commercial views
+- **Sporting** — player metrics, health/fatigue, transfers, tactical board
+- **Fan group ops** — Lakebase ticket allocations, check-in, issues, Genie
+- **Copilot** — Foundation Models + RAG over live and Lakebase data
+
+API-Football team id **42**, Premier League **39**. Sign up at [api-football.com](https://www.api-football.com/) and put the key in `app.yaml`.
+
+### Architecture
+
+```
+React SPA  →  FastAPI (app.py :8000)
+                ├─ API-Football
+                ├─ Open-Meteo
+                ├─ Foundation Models / Genie
+                └─ Lakebase PostgreSQL (fan ops)
 ```
 
-### How Authentication Works
+Fan ops serving path: Bronze → Silver → Gold (Delta) → **Lakebase** → App.
 
-The app uses **Databricks SDK OAuth token rotation** for Lakebase — no static passwords needed:
-
-```python
-from databricks.sdk import WorkspaceClient
-w = WorkspaceClient()
-cred = w.postgres.generate_database_credential()
-password = cred.password  # Short-lived OAuth token
-```
-
-### Database Schema
-
-The fan ops module creates an `arsenal_fan_ops` schema with these tables:
+### Fan ops schema (`arsenal_fan_ops`)
 
 | Table | Purpose |
 |-------|---------|
-| `fan_ops_groups` | Fan group registry (name, region, type, contacts) |
+| `fan_ops_groups` | Fan group registry |
 | `fan_ops_fixtures` | Match schedule |
-| `fan_ops_fans` | Individual fan records linked to groups |
-| `fan_ops_ticket_allocations` | Ticket assignments per fan per fixture |
-| `fan_ops_checkin_events` | Real-time check-in events |
-| `fan_ops_group_issues` | Operational issues and resolutions |
-| `fan_ops_operational_notes` | Staff notes and updates |
+| `fan_ops_fans` | Fans linked to groups |
+| `fan_ops_ticket_allocations` | Seats per fan per fixture |
+| `fan_ops_checkin_events` | Matchday check-in |
+| `fan_ops_group_issues` | Ops issues |
+| `fan_ops_operational_notes` | Staff notes |
 
 ---
 
-## Environment Variables
+## Repo map
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `SERVING_ENDPOINT` | Foundation Model endpoint (e.g., `databricks-claude-sonnet-4-5`) | Recommended |
-| `CATALOG` | Unity Catalog catalog name | Optional |
-| `SCHEMA` | Unity Catalog schema name | Optional |
-| `API_FOOTBALL_KEY` | API-Football key for live data | Recommended |
-| `DATABRICKS_WAREHOUSE_ID` | SQL warehouse for Delta queries | Optional |
-| `GPT_FALLBACK_ENDPOINT` | Databricks external model endpoint for GPT | Optional |
-| `PGHOST` | Lakebase hostname (auto-injected by Databricks Apps) | Auto |
-| `PGDATABASE` | Lakebase database name (auto-injected) | Auto |
-| `PGPORT` | Lakebase port (auto-injected) | Auto |
+```
+databricks.yml                 Bundle + targets (dev / uat / prod)
+app.yaml                       App command + env
+app.py                         FastAPI entry
+resources/arsenal.app.yml      App + Postgres + serving endpoint
+resources/arsenal.lakebase.yml Project, branches, endpoints, roles, database
+scripts/lakebase/              Reset, feature branches, permissions
+db/migrations/                 Versioned schema SQL
+db/permissions/                Branch RBAC SQL
+server/                        API, Lakebase access, ML
+frontend/                      React + Vite (build before deploy)
+```
 
 ---
 
-## API-Football Setup
-
-The platform uses [API-Football](https://www.api-football.com/) for live data:
-
-1. Sign up at https://www.api-football.com/ (free tier: 100 requests/day)
-2. Get your API key
-3. Set it in `app.yaml`:
-
-```yaml
-env:
-  - name: API_FOOTBALL_KEY
-    value: "your-api-key"
-```
-
-**Arsenal Team ID:** 42 | **Premier League ID:** 39
-
----
-
-## Genie AI Assistant
-
-The Genie copilot supports two categories of queries:
-
-### Football Intelligence (Mock/API data)
-- "Tell me about Saka"
-- "What's the next fixture?"
-- "Transfer targets"
-- "Revenue projections"
-
-### Fan Group Operations (Live from Lakebase)
-- "What fan groups are there?" 
-- "Which groups have pending tickets?"
-- "International group attendance"
-- "Accessibility requests"
-- "Cancellation rates"
-- "Who hasn't checked in?"
-- "Matchday support issues"
-
-When answering fan ops queries, Genie explicitly indicates the data source:
-> *Data source: Databricks Lakebase (PostgreSQL)*
-
----
-
-## Customization
-
-### Branding
-
-| Element | Value |
-|---------|-------|
-| Primary Red | `#EF0107` |
-| Navy | `#063672` |
-| Gold | `#9C824A` |
-| Display Font | Bebas Neue |
-| Body Font | Inter |
-| Data Font | Share Tech Mono |
-
-### Arsenal-Specific Config
-
-| Setting | Value |
-|---------|-------|
-| Team ID (API-Football) | 42 |
-| League | Premier League (ID: 39) |
-| Stadium | Emirates Stadium (60,704 capacity) |
-| Weather Location | London (51.5549, -0.1084) |
-
----
-
-## Demo Flow
-
-1. **Executive Dashboard** — Show overall KPIs, next match countdown, alerts
-2. **Football Data** — Live standings, fixtures, squad photos from API-Football
-3. **Player Performance** — Deep dive into player stats with radar charts
-4. **Audience & Demand** — Predict attendance with ML, show weather impact
-5. **Revenue Optimization** — Dynamic pricing simulator, fixture revenue projections
-6. **Health Monitoring** — Squad fitness, injury risk model, fatigue tracking
-7. **Transfer Intelligence** — AI-scored targets, gap analysis, market values
-8. **Live Match Planning** — Drag-and-drop tactical board with ML recommendations
-9. **Fan Group Ops** — Show Lakebase-powered dashboard, drill into groups, update tickets
-10. **Genie AI** — Ask natural language questions, demonstrate Lakebase queries
-11. **Architecture** — Show animated data flow, live Lakebase connection status
-
----
-
-## Business Value
-
-The platform demonstrates how **Databricks** powers end-to-end club intelligence:
-
-| Domain | Capabilities |
-|--------|-------------|
-| **Sporting** | Player performance, injury risk, transfer decisions, squad depth, tactical planning |
-| **Commercial** | Ticket revenue, fan targeting, pricing optimization, campaign ROI |
-| **Operations** | Fan group management, matchday logistics, issue resolution (Lakebase) |
-| **AI/ML** | Foundation Models, attendance prediction, injury risk, transfer scoring |
-| **Unified** | One platform for directors, analysts, medical, marketing, ticketing |
-
----
-
-## License
-
-Internal demo. Arsenal FC branding for illustrative purposes only.
-
----
-
-## Lakebase Branching & Environment Strategy
-
-This repository manages Lakebase infrastructure as code using **Databricks Asset Bundles (DABs)**. The Lakebase project uses the **Autoscaling** model (`postgres_projects`), not the legacy Provisioned model.
-
-### Prerequisites
-
-- **Databricks CLI v1.0.0+** — Required for `postgres_roles`, `postgres_databases`, and all Lakebase resources. Check with `databricks --version`.
-- **CAN_MANAGE** permission on the Lakebase project.
-- OAuth U2M authentication configured (`databricks auth login`).
-
-### Branch Topology
-
-```
-production (protected)          ← Live application data
-├── uat                         ← Business validation before production
-└── development                 ← Active development & testing
-    ├── feature-james-xyz       ← Ephemeral feature branch
-    └── feature-other-change    ← Ephemeral feature branch
-```
-
-| Branch | Purpose | Persistence | Parent | Protected |
-|--------|---------|-------------|--------|-----------|
-| `production` | Live application data, serving the deployed app | Permanent | — | Yes |
-| `uat` | Business acceptance testing before production promotion | Permanent | production | No |
-| `development` | Day-to-day development, periodically reset from production | Permanent | production | No |
-| `feature-*` | Isolated work for individual features/developers | Temporary | development | No |
-
-### Permission Matrix (RBAC)
-
-Lakebase Postgres role state and GRANTs are **branch-local**. Each branch has its own permission model.
-
-| Branch | Role | `arsenal_fan_ops` | `coaching` | `scouting` | Admin Privs |
-|--------|------|-------------------|-----------|-----------|-------------|
-| **production** | App Service Principal | READ + WRITE | READ + WRITE | READ + WRITE | None |
-| **production** | Human Developers | READ only | READ only | READ only | None |
-| **development** | App Service Principal | READ + WRITE | READ + WRITE | READ + WRITE | None |
-| **development** | Developer Group | READ + WRITE | READ + WRITE | READ + WRITE | None |
-| **uat** | App Service Principal | READ + WRITE | READ + WRITE | READ + WRITE | None |
-| **uat** | UAT Tester Group | READ + WRITE | READ + WRITE | READ + WRITE | None |
-
-**Principle of least privilege:**
-- No developer gets `DATABRICKS_SUPERUSER`, `BYPASSRLS`, or `CREATEROLE`
-- Project-level `CAN_USE`/`CAN_MANAGE` are NOT used as substitutes for schema-level Postgres privileges
-- Unity Catalog synced tables remain read-only to all application users
-
-### Repository Structure
-
-```
-resources/
-  arsenal.app.yml           # Databricks App + Lakebase binding
-  arsenal.lakebase.yml      # Lakebase project, branches, endpoints, roles, databases
-
-scripts/
-  lakebase/
-    reset-development.sh    # Reset dev from production + reapply permissions
-    create-feature-branch.sh # Create isolated feature branch from development
-    delete-feature-branch.sh # Safely delete a feature branch
-    apply-permissions.sh    # Apply permission SQL to a specific branch
-    validate-permissions.sh # Validate RBAC across all branches
-
-db/
-  migrations/
-    V001__create_coaching_schema.sql
-    V002__create_scouting_schema.sql
-  permissions/
-    apply_prod_permissions.sql
-    apply_dev_permissions.sql
-    apply_uat_permissions.sql
-```
-
-### Deployment
-
-#### Validate and Deploy
-
-```bash
-# Validate configuration
-databricks bundle validate -t dev
-
-# Deploy to development
-databricks bundle deploy -t dev
-
-# Deploy to production
-databricks bundle validate -t prod
-databricks bundle deploy -t prod
-```
-
-#### What Gets Deployed
-
-The bundle creates/adopts:
-- Lakebase project (adopted from existing `arsenal-lakebase`)
-- Protected production branch with 4-8 CU endpoint
-- Development branch with 0.5-2 CU endpoint (scale-to-zero)
-- UAT branch with 0.5-2 CU endpoint (scale-to-zero)
-- Postgres roles for application and developers
-- Named database (`arsenal_fan_ops`) bound to the app
-
-### Adopting Existing Lakebase Infrastructure
-
-This repository adopts an **already-existing** Lakebase project rather than creating a new one. The adoption process:
-
-1. Existing resources are declared with `replace_existing: true`
-2. The bundle takes over management without destroying data
-3. `lifecycle.prevent_destroy: true` on the project prevents accidental deletion
-
-**Safe adoption steps:**
-
-```bash
-# 1. Verify existing infrastructure
-databricks postgres list-projects -p your-profile
-databricks postgres list-branches projects/arsenal-lakebase -p your-profile
-databricks postgres list-databases projects/arsenal-lakebase/branches/production -p your-profile
-
-# 2. Validate bundle (no changes made)
-databricks bundle validate -t prod
-
-# 3. Deploy — bundle adopts existing resources
-databricks bundle deploy -t prod
-
-# 4. Verify nothing was destroyed
-databricks postgres list-branches projects/arsenal-lakebase -p your-profile
-```
-
-### Development Reset Workflow
-
-The team periodically needs to refresh development with current production data/schema. Lakebase reset is a **full overwrite** of the child branch, which also resets branch-local Postgres roles and GRANTs.
-
-```bash
-# Reset development from production
-./scripts/lakebase/reset-development.sh --profile your-profile
-
-# What happens:
-# 1. Verifies target is "development" (refuses production/uat)
-# 2. Checks for child feature branches (aborts if any exist)
-# 3. Prompts for confirmation
-# 4. Resets development from production via Databricks CLI
-# 5. Waits for branch and endpoint to become ready
-# 6. Reapplies development-specific RBAC (db/permissions/apply_dev_permissions.sql)
-# 7. Validates permissions
-```
-
-**Important:** If child feature branches exist under development, the reset will fail. Delete feature branches first:
-
-```bash
-./scripts/lakebase/delete-feature-branch.sh feature-james-xyz --profile your-profile
-```
-
-### Feature Branch Workflow
-
-Developers create isolated branches from development for feature work:
-
-```bash
-# Create a feature branch
-./scripts/lakebase/create-feature-branch.sh feature-james-xyz --profile your-profile
-
-# Work on your feature...
-# Feature branches inherit data + schema from development
-
-# Delete when done
-./scripts/lakebase/delete-feature-branch.sh feature-james-xyz --profile your-profile
-```
-
-**Critical:** Lakebase does **NOT** merge database branches from child → parent. Feature branches are **disposable environments**. Schema changes must be promoted through source-controlled migrations, not branch merging.
-
-### Schema Migrations
-
-Database schema changes live in `db/migrations/` and are applied through environments in order:
-
-```
-development → uat → production
-```
-
-**Workflow:**
-1. Write migration SQL in `db/migrations/V00N__description.sql`
-2. Test on a feature branch or development
-3. Apply to UAT for business validation
-4. Apply to production during deployment
-
-**Migrations are NOT applied by copying database branches.** They are explicit SQL files tracked in Git.
-
-### How the App Receives Its Lakebase Connection
-
-The Databricks App resource binding in `resources/arsenal.app.yml` declares a `postgres` resource. When deployed, Databricks automatically injects:
-
-| Variable | Description |
-|----------|-------------|
-| `PGHOST` | Lakebase endpoint hostname |
-| `PGDATABASE` | Database name |
-| `PGPORT` | Port (5432) |
-| `PGUSER` | Service principal role |
-| `PGSSLMODE` | SSL mode |
-
-The application code in `server/data/fan_ops_db.py` detects `PGHOST` and connects using Databricks SDK OAuth token rotation. If Lakebase is unavailable, it falls back to in-memory SQLite for demo purposes.
-
-### Validation
-
-```bash
-# Validate all permissions and infrastructure
-./scripts/lakebase/validate-permissions.sh --profile your-profile
-
-# Checks:
-# ✓ Project exists
-# ✓ Production branch exists and is protected
-# ✓ Development branch exists
-# ✓ UAT branch exists
-# ✓ All endpoints are active
-# ✓ Roles are correctly configured
-```
+Internal demo. Arsenal FC branding is illustrative only.

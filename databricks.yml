@@ -95,6 +95,28 @@ targets:
                 name: "databricks-claude-sonnet-4-5"
                 permission: CAN_QUERY
 
+  uat:
+    workspace:
+      host: https://fevm-serverless-stable-1acr1x.cloud.databricks.com
+      profile: fe-vm-1acr1x
+    variables:
+      catalog: "main"
+      schema: "arsenal_uat"
+    resources:
+      apps:
+        arsenal_app:
+          name: arsenal-intelligence-uat
+          resources:
+            - name: postgres
+              postgres:
+                branch: ${resources.postgres_branches.uat.name}
+                database: ${resources.postgres_branches.uat.name}/databases/db-k5rv-e6gmeiiqbn
+                permission: CAN_CONNECT_AND_CREATE
+            - name: serving-endpoint
+              serving_endpoint:
+                name: "databricks-claude-sonnet-4-5"
+                permission: CAN_QUERY
+
   prod:
     mode: production
     workspace:
